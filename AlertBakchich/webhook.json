@@ -1,0 +1,49 @@
+﻿{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Payment",
+  "type": "object",
+  "properties": {
+    "paymentID": {
+      "type": "integer",
+      "description": "Unique identifier for the payment."
+    },
+    "message": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Optional message left by the payer."
+    },
+    "donor": {
+      "type": "object",
+      "description": "${t('donor')}",
+      "properties": {
+        "username": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fullname": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "amount": {
+      "type": "number",
+      "description": "The amount of the payment."
+    },
+    "asset": {
+      "type": "string",
+      "description": "The type of asset (e.g., DiamondsTND, PointsTND)."
+    }
+  },
+  "required": [
+    "paymentID",
+    "amount",
+    "asset"
+  ]
+}
