@@ -69,7 +69,8 @@ namespace AlertBakchich.Services
                 textHorizontal = "50%",
                 customCss = "",
                 customJs = "",
-                textWidth = ""
+                textWidth = "",
+                loopVideo = false
             };
         }
     }

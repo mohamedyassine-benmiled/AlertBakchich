@@ -34,6 +34,6 @@ namespace AlertBakchich.Models
         public string textWidth { get; set; } = string.Empty;
         public string? customCss { get; set; } = string.Empty;
         public string? customJs { get; set; } = string.Empty;
+        public bool loopVideo { get; set; } = false;
     }
 }
-

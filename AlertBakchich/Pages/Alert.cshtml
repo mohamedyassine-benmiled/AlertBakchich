@@ -151,7 +151,7 @@
                     mediaElement = document.createElement('video');
                     mediaElement.autoplay = true;
                     mediaElement.muted = true;
-                    mediaElement.loop = false;
+                    mediaElement.loop = config.loopVideo;
                 } else {
                     mediaElement = document.createElement('img');
                 }

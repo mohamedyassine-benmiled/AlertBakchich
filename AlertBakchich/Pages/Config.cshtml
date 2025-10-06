@@ -228,6 +228,14 @@
                     <input asp-for="Config.mediaHeight" type="number" min="100" max="1080" class="form-control" placeholder="Auto (original size)">
                     <span class="help-text">Leave empty to use original media height</span>
                 </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input asp-for="Config.loopVideo" class="form-check-input" type="checkbox" id="loopVideoCheckbox">
+                        <label class="form-check-label" for="loopVideoCheckbox">Loop video</label>
+                    </div>
+                    <span class="help-text">If enabled, alert videos will loop instead of stopping at the end.</span>
+                </div>
             </div>
 
             <div class="section">
