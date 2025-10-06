@@ -27,6 +27,10 @@ namespace AlertBakchich.Pages
                         Console.WriteLine($"- {error.ErrorMessage}");
                     }
                 }
+                TempData["ModelStateErrors"] = 
+                    string.Join("\n", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
                 return Page();
             }
 
@@ -37,40 +41,7 @@ namespace AlertBakchich.Pages
 
         public async Task<IActionResult> OnPostReset()
         {
-            await _configService.SaveConfiguration(new AlertConfig
-            {
-                alertDuration = 5,
-                messagePosition = "inside",
-                animationType = "slide",
-                animationDirection = "bottom",
-                mediaType = "gif",
-                mediaUrl = "",
-                mediaWidth = 400,
-                mediaHeight = 300,
-                fontFamily = "'Arial', sans-serif",
-                donorFontSize = 32,
-                donorColor = "#ffffff",
-                amountFontSize = 48,
-                amountColor = "#ffd700",
-                messageFontSize = 24,
-                messageColor = "#ffffff",
-                backgroundColor = "#000000",
-                backgroundOpacity = 80,
-                showBorder = false,
-                borderColor = "#ffd700",
-                borderWidth = 3,
-                textShadow = true,
-                playSound = false,
-                soundUrl = "",
-                queueAlerts = true,
-                maxQueue = 10,
-                zIndexMedia = 1,
-                zIndexText = 2,
-                textVertical = "50%",
-                textHorizontal = "50%",
-                customCss = "",
-                customJs = ""
-            });
+            await _configService.SaveConfiguration(new AlertConfig());
             TempData["SuccessMessage"] = "Configuration reset to defaults!";
             return RedirectToPage();
         }

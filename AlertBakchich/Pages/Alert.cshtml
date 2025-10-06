@@ -204,6 +204,7 @@
 
             if (config.playSound && config.soundUrl) {
                 const audio = new Audio(config.soundUrl);
+                audio.volume = (typeof config.audioVolume === 'number' ? config.audioVolume : 100) / 100;
                 audio.play().catch(err => console.log('Audio play failed:', err));
             }
 

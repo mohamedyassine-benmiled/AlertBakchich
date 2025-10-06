@@ -333,6 +333,13 @@
                     <label asp-for="Config.soundUrl">Sound URL</label>
                     <input asp-for="Config.soundUrl" type="text" placeholder="https://example.com/alert.mp3" class="form-control">
                 </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.audioVolume">Alert Sound Volume</label>
+                    <input asp-for="Config.audioVolume" type="range" min="0" max="100" class="form-control" oninput="document.getElementById('audioVolumeValue').textContent = this.value + '%'">
+                    <span class="value-display" id="audioVolumeValue">@Model.Config.audioVolume%</span>
+                    <span class="help-text">Set the volume for alert sounds (0% = mute, 100% = max)</span>
+                </div>
             </div>
 
             <div class="section">
