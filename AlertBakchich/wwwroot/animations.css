@@ -1,0 +1,151 @@
+﻿/* Alert Animations */
+
+/* Slide Animations */
+@keyframes slideFromTop {
+    from {
+        transform: translateY(-100vh);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideFromBottom {
+    from {
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideFromLeft {
+    from {
+        transform: translateX(-100vw);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideFromRight {
+    from {
+        transform: translateX(100vw);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutTop {
+    to {
+        transform: translateY(-100vh);
+        opacity: 0;
+    }
+}
+
+@keyframes slideOutBottom {
+    to {
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+}
+
+@keyframes slideOutLeft {
+    to {
+        transform: translateX(-100vw);
+        opacity: 0;
+    }
+}
+
+@keyframes slideOutRight {
+    to {
+        transform: translateX(100vw);
+        opacity: 0;
+    }
+}
+
+/* Fade Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+    }
+}
+
+/* Zoom Animations */
+@keyframes zoomFromCenter {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes zoomOut {
+    to {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+/* Bounce Animations */
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Position Layout Classes */
+.position-inside {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.position-bottom,
+.position-top {
+    flex-direction: column;
+    align-items: center;
+}
+
+.position-left {
+    flex-direction: row-reverse;
+    align-items: center;
+}
+
+.position-right {
+    flex-direction: row;
+    align-items: center;
+}
+

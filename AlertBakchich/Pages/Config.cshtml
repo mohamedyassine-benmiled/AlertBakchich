@@ -1,0 +1,513 @@
+﻿@page
+@model AlertBakchich.Pages.ConfigModel
+@{
+    ViewData["Title"] = "Alert Configuration";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/configuration.css">
+    <link rel="stylesheet" href="~/animations.css">
+    <style>
+        .preview-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .preview-section h2 {
+            color: white;
+            border-bottom-color: #444;
+        }
+        
+        .preview-container {
+            width: 100%;
+            height: 400px;
+            background: repeating-conic-gradient(#808080 0% 25%, transparent 0% 50%) 50% / 20px 20px;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .preview-alert {
+            position: relative !important;
+            display: none;
+            opacity: 0;
+            max-width: 95%;
+            max-height: 95%;
+            transform: none !important;
+        }
+        
+        .preview-alert.active {
+            display: flex;
+        }
+        
+        .preview-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .preview-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        .success-message {
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .media-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        .media-content {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .text-overlay {
+            padding: 20px;
+            border-radius: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .donor-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .amount {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎬 Stream Alert Configuration</h1>
+
+    <div class="config-panel">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="success-message">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ModelStateErrors"] != null)
+        {
+            <div class="alert alert-danger" style="background:#ffdddd;color:#a00;padding:15px;border-radius:8px;margin-bottom:20px;">
+                <b>ModelState Errors:</b><br />
+                @Html.Raw(TempData["ModelStateErrors"])
+            </div>
+        }
+
+        <form method="post">
+            <div class="preview-section section">
+                <h2>Live Preview</h2>
+                <div class="preview-container" id="previewContainer">
+                    <iframe id="alertFrame" src="/alert" style="width: 100%; height: 100%; border: none; border-radius: 10px;"></iframe>
+                </div>
+                <div class="preview-controls">
+                    <button type="button" class="btn btn-primary" onclick="showPreview()">👁️ Preview Alert</button>
+                    <button type="button" class="btn btn-secondary" onclick="reloadPreview()">🔄 Reload Preview</button>
+                </div>
+                <div class="preview-info">
+                    💡 Tip: The preview shows the actual alert page. Click "Preview Alert" to trigger a test alert!
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Alert Display</h2>
+
+                <div class="form-group">
+                    <label asp-for="Config.alertDuration">Alert Duration (seconds)</label>
+                    <input asp-for="Config.alertDuration" type="number" min="1" max="60" class="form-control">
+                    <span class="help-text">How long each alert stays on screen</span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.messagePosition">Message Position</label>
+                    <select asp-for="Config.messagePosition" class="form-control">
+                        <option value="inside">Inside Media</option>
+                        <option value="bottom">Below Media</option>
+                        <option value="top">Above Media</option>
+                        <option value="left">Left of Media</option>
+                        <option value="right">Right of Media</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.animationType">Animation Type</label>
+                    <select asp-for="Config.animationType" class="form-control">
+                        <option value="slide">Slide In</option>
+                        <option value="fade">Fade In</option>
+                        <option value="zoom">Zoom In</option>
+                        <option value="bounce">Bounce In</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.animationDirection">Animation Direction</label>
+                    <select asp-for="Config.animationDirection" class="form-control">
+                        <option value="top">From Top</option>
+                        <option value="bottom">From Bottom</option>
+                        <option value="left">From Left</option>
+                        <option value="right">From Right</option>
+                        <option value="center">From Center</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Media Settings</h2>
+
+                <div class="form-group">
+                    <label asp-for="Config.mediaType">Media Type</label>
+                    <select asp-for="Config.mediaType" class="form-control">
+                        <option value="image">Image</option>
+                        <option value="video">Video</option>
+                        <option value="gif">GIF</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.mediaUrl">Media URL</label>
+                    <input asp-for="Config.mediaUrl" type="text" placeholder="https://example.com/alert.gif" class="form-control">
+                    <span class="help-text">URL to your image, video, or GIF</span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.mediaWidth">Media Width (px)</label>
+                    <input asp-for="Config.mediaWidth" type="number" min="100" max="1920" class="form-control" placeholder="Auto (original size)">
+                    <span class="help-text">Leave empty to use original media width</span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.mediaHeight">Media Height (px)</label>
+                    <input asp-for="Config.mediaHeight" type="number" min="100" max="1080" class="form-control" placeholder="Auto (original size)">
+                    <span class="help-text">Leave empty to use original media height</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Text Styling</h2>
+
+                <div class="form-group">
+                    <label asp-for="Config.fontFamily">Font Family</label>
+                    <select asp-for="Config.fontFamily" class="form-control">
+                        <option value="'Arial', sans-serif">Arial</option>
+                        <option value="'Helvetica', sans-serif">Helvetica</option>
+                        <option value="'Georgia', serif">Georgia</option>
+                        <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                        <option value="'Impact', fantasy">Impact</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.donorFontSize">Donor Name Font Size (px)</label>
+                    <input asp-for="Config.donorFontSize" type="number" min="12" max="100" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.donorColor">Donor Name Color</label>
+                    <input asp-for="Config.donorColor" type="color" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.amountFontSize">Amount Font Size (px)</label>
+                    <input asp-for="Config.amountFontSize" type="number" min="12" max="100" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.amountColor">Amount Color</label>
+                    <input asp-for="Config.amountColor" type="color" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.messageFontSize">Message Font Size (px)</label>
+                    <input asp-for="Config.messageFontSize" type="number" min="12" max="100" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.messageColor">Message Color</label>
+                    <input asp-for="Config.messageColor" type="color" class="form-control">
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Background & Effects</h2>
+
+                <div class="form-group">
+                    <label asp-for="Config.backgroundColor">Background Color</label>
+                    <input asp-for="Config.backgroundColor" type="color" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.backgroundOpacity">Background Opacity</label>
+                    <input asp-for="Config.backgroundOpacity" type="range" min="0" max="100" class="form-control" oninput="updateOpacityDisplay(this.value)">
+                    <span class="value-display" id="opacityValue">@Model.Config.backgroundOpacity%</span>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input asp-for="Config.showBorder" type="checkbox">
+                        Show Border
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.borderColor">Border Color</label>
+                    <input asp-for="Config.borderColor" type="color" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.borderWidth">Border Width (px)</label>
+                    <input asp-for="Config.borderWidth" type="number" min="0" max="20" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input asp-for="Config.textShadow" type="checkbox">
+                        Text Shadow
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input asp-for="Config.playSound" type="checkbox">
+                        Play Sound on Alert
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.soundUrl">Sound URL</label>
+                    <input asp-for="Config.soundUrl" type="text" placeholder="https://example.com/alert.mp3" class="form-control">
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Alert Queue</h2>
+
+                <div class="form-group">
+                    <label>
+                        <input asp-for="Config.queueAlerts" type="checkbox">
+                        Queue Multiple Alerts
+                    </label>
+                    <span class="help-text">Show alerts one by one instead of overlapping</span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Config.maxQueue">Max Queue Size</label>
+                    <input asp-for="Config.maxQueue" type="number" min="1" max="100" class="form-control">
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Advanced Display</h2>
+                <div class="form-group">
+                    <label asp-for="Config.zIndexMedia">Media Z-Index</label>
+                    <input asp-for="Config.zIndexMedia" type="number" class="form-control" placeholder="Default: 1">
+                    <span class="help-text">Controls stacking order of the media (video/image/gif)</span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Config.zIndexText">Text Z-Index</label>
+                    <input asp-for="Config.zIndexText" type="number" class="form-control" placeholder="Default: 2">
+                    <span class="help-text">Controls stacking order of the text overlay</span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Config.textVertical">Text Vertical Position</label>
+                    <input asp-for="Config.textVertical" type="range" min="0" max="100" class="form-control" oninput="updateTextVerticalDisplay(this.value)">
+                    <span class="value-display" id="textVerticalValue">@Model.Config.textVertical</span>
+                    <span class="help-text">Vertical position of text overlay (percentage, 0% = top, 100% = bottom)</span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Config.textHorizontal">Text Horizontal Position</label>
+                    <input asp-for="Config.textHorizontal" type="range" min="0" max="100" class="form-control" oninput="updateTextHorizontalDisplay(this.value)">
+                    <span class="value-display" id="textHorizontalValue">@Model.Config.textHorizontal</span>
+                    <span class="help-text">Horizontal position of text overlay (percentage, 0% = left, 100% = right)</span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Config.customCss">Custom CSS</label>
+                    <textarea asp-for="Config.customCss" class="form-control" rows="3" placeholder="Enter custom CSS to inject into alert page"></textarea>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Config.customJs">Custom JS</label>
+                    <textarea asp-for="Config.customJs" class="form-control" rows="3" placeholder="Enter custom JavaScript to inject into alert page"></textarea>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Config.textWidth">Text Overlay Width</label>
+                    <input asp-for="Config.textWidth" type="text" class="form-control" placeholder="e.g. 400px or 80%">
+                    <span class="help-text">Set a max width for the text overlay (e.g. 400px or 80%). Leave empty for auto width.</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">💾 Save Configuration</button>
+                <button type="button" class="btn btn-secondary" onclick="testAlert()">🧪 Test Alert</button>
+                <button type="submit" asp-page-handler="Reset" class="btn btn-secondary">🔄 Reset to Default</button>
+            </div>
+
+            <div class="section">
+                <h2>Alert Display URL</h2>
+                <div class="url-box">
+                    <code id="alertUrl">http://localhost:5000/alert</code>
+                    <button type="button" class="btn btn-copy" onclick="copyUrl()">📋 Copy URL</button>
+                </div>
+                <span class="help-text">Add this URL as a browser source in OBS/Streamlabs</span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateOpacityDisplay(value) {
+        document.getElementById('opacityValue').textContent = value + '%';
+    }
+
+    function testAlert() {
+        const alertWindow = window.open('/alert', 'AlertTest', 'width=800,height=600');
+        setTimeout(() => {
+            alertWindow.postMessage({
+                type: 'testAlert',
+                payment: {
+                    paymentID: 999,
+                    donor: { username: 'TestUser' },
+                    amount: 100,
+                    asset: { name: 'Diamonds', id: 'DiamondsTND' },
+                    message: 'This is a test alert!'
+                }
+            }, '*');
+        }, 1000);
+    }
+
+    function copyUrl() {
+        const url = document.getElementById('alertUrl').textContent;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('✓ URL copied to clipboard!');
+        });
+    }
+
+    function reloadPreview() {
+        const iframe = document.getElementById('alertFrame');
+        iframe.contentWindow.location.reload();
+    }
+
+    // Preview functionality
+    let previewTimeout;
+    let previewAnimationTimeout;
+
+    function getCurrentConfig() {
+        return {
+            alertDuration: document.querySelector('[name="Config.alertDuration"]').value,
+            messagePosition: document.querySelector('[name="Config.messagePosition"]').value,
+            animationType: document.querySelector('[name="Config.animationType"]').value,
+            animationDirection: document.querySelector('[name="Config.animationDirection"]').value,
+            mediaType: document.querySelector('[name="Config.mediaType"]').value,
+            mediaUrl: document.querySelector('[name="Config.mediaUrl"]').value,
+            mediaWidth: document.querySelector('[name="Config.mediaWidth"]').value,
+            mediaHeight: document.querySelector('[name="Config.mediaHeight"]').value,
+            fontFamily: document.querySelector('[name="Config.fontFamily"]').value,
+            donorFontSize: document.querySelector('[name="Config.donorFontSize"]').value,
+            donorColor: document.querySelector('[name="Config.donorColor"]').value,
+            amountFontSize: document.querySelector('[name="Config.amountFontSize"]').value,
+            amountColor: document.querySelector('[name="Config.amountColor"]').value,
+            messageFontSize: document.querySelector('[name="Config.messageFontSize"]').value,
+            messageColor: document.querySelector('[name="Config.messageColor"]').value,
+            backgroundColor: document.querySelector('[name="Config.backgroundColor"]').value,
+            backgroundOpacity: document.querySelector('[name="Config.backgroundOpacity"]').value,
+            showBorder: document.querySelector('[name="Config.showBorder"]').checked,
+            borderColor: document.querySelector('[name="Config.borderColor"]').value,
+            borderWidth: document.querySelector('[name="Config.borderWidth"]').value,
+            textShadow: document.querySelector('[name="Config.textShadow"]').checked,
+            playSound: document.querySelector('[name="Config.playSound"]').checked,
+            soundUrl: document.querySelector('[name="Config.soundUrl"]').value,
+            zIndexMedia: document.querySelector('[name="Config.zIndexMedia"]').value,
+            zIndexText: document.querySelector('[name="Config.zIndexText"]').value,
+            textVertical: document.querySelector('[name="Config.textVertical"]').value,
+            textHorizontal: document.querySelector('[name="Config.textHorizontal"]').value,
+            customCss: document.querySelector('[name="Config.customCss"]').value,
+            customJs: document.querySelector('[name="Config.customJs"]').value
+        };
+    }
+
+    function showPreview() {
+        const iframe = document.getElementById('alertFrame');
+        
+        // Send a test alert message to the iframe
+        iframe.contentWindow.postMessage({
+            type: 'testAlert',
+            payment: {
+                paymentID: 999,
+                donor: { username: 'TestUser' },
+                amount: 100,
+                asset: { name: 'Diamonds', id: 'DiamondsTND' },
+                message: 'This is a preview of your alert!'
+            }
+        }, '*');
+    }
+
+    function updateTextVerticalDisplay(value) {
+        document.getElementById('textVerticalValue').textContent = value + '%';
+    }
+    function updateTextHorizontalDisplay(value) {
+        document.getElementById('textHorizontalValue').textContent = value + '%';
+    }
+
+    // Set initial slider values if model has percent string
+    document.addEventListener('DOMContentLoaded', function() {
+        var vert = document.querySelector('[name="Config.textVertical"]');
+        var horiz = document.querySelector('[name="Config.textHorizontal"]');
+        if (vert && vert.value && vert.value.includes('%')) {
+            vert.value = parseInt(vert.value);
+            updateTextVerticalDisplay(vert.value);
+        }
+        if (horiz && horiz.value && horiz.value.includes('%')) {
+            horiz.value = parseInt(horiz.value);
+            updateTextHorizontalDisplay(horiz.value);
+        }
+    });
+</script>
+</body>
+</html>

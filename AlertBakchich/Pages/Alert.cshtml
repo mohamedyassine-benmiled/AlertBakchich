@@ -1,0 +1,307 @@
+﻿@page
+@model AlertBakchich.Pages.AlertModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Alert</title>
+    <link rel="stylesheet" href="~/animations.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        .alert-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            background: transparent;
+        }
+
+        .alert-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .media-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .media-content {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .text-overlay {
+            padding: 20px;
+            border-radius: 10px;
+            /* Position and z-index will be set inline from config */
+        }
+
+        .position-inside .text-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 90%;
+        }
+
+        .position-bottom .text-overlay,
+        .position-top .text-overlay {
+            margin: 20px;
+            text-align: center;
+        }
+
+        .position-left .text-overlay,
+        .position-right .text-overlay {
+            margin: 0 20px;
+            max-width: 400px;
+        }
+
+        .donor-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .amount {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+        /* Custom CSS injected from config */
+        @Html.Raw(Model.Config?.customCss)
+    </style>
+</head>
+<body>
+    <div id="alertRoot"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        // Configuration loaded securely from server
+        let config = @Html.Raw(Model.ConfigJson);
+        let alertQueue = [];
+        let isShowingAlert = false;
+
+        console.log('Configuration loaded from server:', config);
+
+        function showAlert(payment) {
+            if (config.queueAlerts && isShowingAlert) {
+                if (alertQueue.length < config.maxQueue) {
+                    alertQueue.push(payment);
+                }
+                return;
+            }
+
+            isShowingAlert = true;
+
+            const alertRoot = document.getElementById('alertRoot');
+            const alertContainer = document.createElement('div');
+            alertContainer.className = `alert-container position-${config.messagePosition}`;
+
+            const mediaWrapper = document.createElement('div');
+            mediaWrapper.className = 'media-wrapper';
+            
+            // Use 100% if width/height are null/empty, otherwise use the specified pixel values
+            if (config.mediaWidth) {
+                mediaWrapper.style.width = config.mediaWidth + 'px';
+            }
+            if (config.mediaHeight) {
+                mediaWrapper.style.height = config.mediaHeight + 'px';
+            }
+
+            if (config.showBorder) {
+                mediaWrapper.style.border = `${config.borderWidth}px solid ${config.borderColor}`;
+            }
+
+            let mediaElement;
+            if (config.mediaUrl) {
+                if (config.mediaType === 'video') {
+                    mediaElement = document.createElement('video');
+                    mediaElement.autoplay = true;
+                    mediaElement.muted = true;
+                    mediaElement.loop = false;
+                } else {
+                    mediaElement = document.createElement('img');
+                }
+                mediaElement.src = config.mediaUrl;
+                mediaElement.className = 'media-content';
+                mediaElement.style.zIndex = config.zIndexMedia || 1;
+                mediaWrapper.appendChild(mediaElement);
+            }
+
+            const textOverlay = document.createElement('div');
+            textOverlay.className = 'text-overlay';
+            textOverlay.style.zIndex = config.zIndexText || 2;
+            if (config.textVertical) textOverlay.style.top = (typeof config.textVertical === 'string' && config.textVertical.includes('%')) ? config.textVertical : (config.textVertical + '%');
+            if (config.textHorizontal) textOverlay.style.left = (typeof config.textHorizontal === 'string' && config.textHorizontal.includes('%')) ? config.textHorizontal : (config.textHorizontal + '%');
+            if (config.textWidth) textOverlay.style.width = config.textWidth;
+
+            const opacity = config.backgroundOpacity / 100;
+            const bgColor = hexToRgb(config.backgroundColor);
+            textOverlay.style.backgroundColor = `rgba(${bgColor.r}, ${bgColor.g}, ${bgColor.b}, ${opacity})`;
+            textOverlay.style.fontFamily = config.fontFamily;
+
+            if (config.showBorder && config.messagePosition !== 'inside') {
+                textOverlay.style.border = `${config.borderWidth}px solid ${config.borderColor}`;
+            }
+
+            const donorName = payment.donor?.username || payment.donor?.fullname || 'Anonymous';
+            
+            textOverlay.innerHTML = `
+                <div class="donor-name" style="font-size: ${config.donorFontSize}px; color: ${config.donorColor}; ${config.textShadow ? 'text-shadow: 2px 2px 4px rgba(0,0,0,0.8);' : ''}">${escapeHtml(donorName)}</div>
+                <div class="amount" style="font-size: ${config.amountFontSize}px; color: ${config.amountColor}; ${config.textShadow ? 'text-shadow: 2px 2px 4px rgba(0,0,0,0.8);' : ''}">${payment.amount} ${escapeHtml(payment.asset.name)}</div>
+                ${payment.message ? `<div class="message" style="font-size: ${config.messageFontSize}px; color: ${config.messageColor}; ${config.textShadow ? 'text-shadow: 2px 2px 4px rgba(0,0,0,0.8);' : ''}">${escapeHtml(payment.message)}</div>` : ''}
+            `;
+
+            if (config.messagePosition === 'inside') {
+                mediaWrapper.appendChild(textOverlay);
+                alertContainer.appendChild(mediaWrapper);
+            } else if (config.messagePosition === 'top') {
+                alertContainer.appendChild(textOverlay);
+                if (mediaWrapper.children.length > 0) {
+                    alertContainer.appendChild(mediaWrapper);
+                }
+            } else {
+                if (mediaWrapper.children.length > 0) {
+                    alertContainer.appendChild(mediaWrapper);
+                }
+                alertContainer.appendChild(textOverlay);
+            }
+
+            alertRoot.appendChild(alertContainer);
+
+            if (config.playSound && config.soundUrl) {
+                const audio = new Audio(config.soundUrl);
+                audio.play().catch(err => console.log('Audio play failed:', err));
+            }
+
+            let animationIn = '';
+            let animationOut = '';
+
+            if (config.animationType === 'slide') {
+                switch (config.animationDirection) {
+                    case 'top':
+                        animationIn = 'slideFromTop';
+                        animationOut = 'slideOutTop';
+                        break;
+                    case 'bottom':
+                        animationIn = 'slideFromBottom';
+                        animationOut = 'slideOutBottom';
+                        break;
+                    case 'left':
+                        animationIn = 'slideFromLeft';
+                        animationOut = 'slideOutLeft';
+                        break;
+                    case 'right':
+                        animationIn = 'slideFromRight';
+                        animationOut = 'slideOutRight';
+                        break;
+                    default:
+                        animationIn = 'slideFromBottom';
+                        animationOut = 'slideOutBottom';
+                }
+            } else if (config.animationType === 'fade') {
+                animationIn = 'fadeIn';
+                animationOut = 'fadeOut';
+            } else if (config.animationType === 'zoom') {
+                animationIn = 'zoomFromCenter';
+                animationOut = 'zoomOut';
+            } else if (config.animationType === 'bounce') {
+                animationIn = 'bounceIn';
+                animationOut = 'zoomOut';
+            }
+
+            alertContainer.style.animation = `${animationIn} 0.6s ease-out forwards`;
+            alertContainer.classList.add('active');
+
+            const duration = parseInt(config.alertDuration) * 1000;
+            setTimeout(() => {
+                alertContainer.style.animation = `${animationOut} 0.6s ease-in forwards`;
+                
+                setTimeout(() => {
+                    alertRoot.removeChild(alertContainer);
+                    isShowingAlert = false;
+                    
+                    if (alertQueue.length > 0) {
+                        const nextPayment = alertQueue.shift();
+                        setTimeout(() => showAlert(nextPayment), 500);
+                    }
+                }, 600);
+            }, duration);
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 0, b: 0 };
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/paymentHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceivePayment", (payment) => {
+            console.log("Payment received:", payment);
+            showAlert(payment);
+        });
+
+        connection.start()
+            .then(() => console.log("Connected to SignalR hub"))
+            .catch(err => console.error("Error connecting to SignalR:", err));
+
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'testAlert') {
+                showAlert(event.data.payment);
+            }
+        });
+    </script>
+    @if (!string.IsNullOrWhiteSpace(Model.Config?.customJs))
+    {
+        <script>
+            @Html.Raw(Model.Config.customJs)
+        </script>
+    }
+</body>
+</html>
