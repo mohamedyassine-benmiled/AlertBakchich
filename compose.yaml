@@ -1,0 +1,7 @@
+﻿services:
+  alertbakchich:
+    image: alertbakchich
+    build:
+      context: .
+      dockerfile: AlertBakchich/Dockerfile
+
