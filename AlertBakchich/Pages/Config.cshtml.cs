@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using AlertBakchich.Services;
+using AlertBakchich.Models;
 
 namespace AlertBakchich.Pages
 {
