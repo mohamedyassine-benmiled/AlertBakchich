@@ -287,6 +287,12 @@
             showAlert(payment);
         });
 
+        // Reload the page when config is updated
+        connection.on("ConfigUpdated", () => {
+            console.log("Config updated, reloading alert page...");
+            window.location.reload();
+        });
+
         connection.start()
             .then(() => console.log("Connected to SignalR hub"))
             .catch(err => console.error("Error connecting to SignalR:", err));

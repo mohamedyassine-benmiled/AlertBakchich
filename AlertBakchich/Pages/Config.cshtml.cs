@@ -15,7 +15,7 @@ namespace AlertBakchich.Pages
             Config = _configService.GetConfiguration();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPost()
         {
             if (!ModelState.IsValid)
             {
@@ -30,14 +30,14 @@ namespace AlertBakchich.Pages
                 return Page();
             }
 
-            _configService.SaveConfiguration(Config);
+            await _configService.SaveConfiguration(Config);
             TempData["SuccessMessage"] = "Configuration saved successfully!";
             return RedirectToPage();
         }
 
-        public IActionResult OnPostReset()
+        public async Task<IActionResult> OnPostReset()
         {
-            _configService.SaveConfiguration(new AlertConfig
+            await _configService.SaveConfiguration(new AlertConfig
             {
                 alertDuration = 5,
                 messagePosition = "inside",

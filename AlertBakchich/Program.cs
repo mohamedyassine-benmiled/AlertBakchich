@@ -52,4 +52,3 @@ app.MapGet("/configuration.css", async context =>
 });
 
 app.Run();
-
